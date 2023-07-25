@@ -1,32 +1,25 @@
-import pygame
-
 import game
-from constants import width, height, frame_rate, load_text
 
 
 def main():
-    # Some initialization stuff.
-    pygame.init()
-    clock = pygame.time.Clock()
-    screen = pygame.display.set_mode((width, height))
-    load_text()
-
     board = game.empty_board()
     state = game.RED_TURN
 
+    game.print_board(board)
+
     while True:
-        # Update the state and check if we should exit the app.
-        state, done = game.update(state, board)
-        if done:
+        state = game.update(state, board)
+        game.print_board(board)
+
+        if state == game.RED_WIN:
+            print("\nRed wins!")
             break
-
-        # Draw the state to the screen.
-        game.draw(state, board, screen)
-
-        # Wait a bit.
-        clock.tick(frame_rate)
-
-    pygame.quit()
+        elif state == game.YELLOW_WIN:
+            print("\nYellow wins!")
+            break
+        elif state == game.DRAW:
+            print("\nDraw!")
+            break
 
 
 if __name__ == "__main__":

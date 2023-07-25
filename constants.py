@@ -45,7 +45,7 @@ def resize_surface(surface: pygame.Surface, n: int):
 
 
 def load_scaled(path: str) -> pygame.Surface:
-    white = 0xFFFFFF
+    white = (255, 255, 255)
     image = pygame.image.load(path)
     width, height = image.get_size()
     pixels = pygame.PixelArray(image)

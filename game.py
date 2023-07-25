@@ -1,22 +1,7 @@
 from typing import Optional, Literal, TypeAlias
 
-import pygame
-
-from constants import (
-    rows,
-    columns,
-    padding,
-    top_padding,
-    piece_size,
-    border_size,
-    border_color,
-    background_color,
-    red_color,
-    yellow_color,
-    text_holder,
-    number_x_offset,
-    number_y_offset,
-)
+ROWS = 6
+COLUMNS = 7
 
 Piece: TypeAlias = Literal["RED", "YELLOW"]
 
@@ -34,6 +19,11 @@ DRAW: State = "DRAW"
 Board = list[list[Optional[Piece]]]
 
 
+MAKE_TEXT_RED = "\x1B[37;41m"
+MAKE_TEXT_YELLOW = "\x1B[30;43m"
+RESET_TEXT_COLOR = "\x1B[0m"
+
+
 def empty_board() -> Board:
     """
     This function returns an empty board.
@@ -43,20 +33,44 @@ def empty_board() -> Board:
     Returns:
         the empty board
     """
-    raise NotImplementedError
+    return [
+        [None, None, None, None, None, None, None],
+        [None, None, None, None, None, None, None],
+        [None, None, None, None, None, None, None],
+        [None, None, None, None, None, None, None],
+        [None, None, None, None, None, None, None],
+        [None, None, None, None, None, None, None],
+    ]
 
 
-def get_input() -> tuple[Optional[int], bool]:
+def get_input(board: Board, state: State) -> int:
     """
-    This function checks the pygame events to see if any of the number keys
-    from 1 to 6 were pressed. It also checks if the app should exit.
+    This function checks prompts the user for an input and returns the result.
+    It prompts them until they enter a valid move.
 
     Inputs:
+        board: the board
+        state: the current state
 
     Returns:
-        move, done: move is an number from 0 to 6 or `None` and done is a bool
+        a number from 0 to 6 that represents a valid move
     """
-    raise NotImplementedError
+    print()
+    if state == RED_TURN:
+        prompt = "Red's move: "
+    else:
+        prompt = "Yellow's move: "
+
+    while True:
+        try:
+            raw = input(prompt)
+            move = int(raw) - 1
+            if is_valid(board, move):
+                print()
+                return move
+        except ValueError:
+            pass
+        print("Invalid move! ", end="")
 
 
 def get_horizontal_winner(board: Board) -> Optional[Piece]:
@@ -70,7 +84,23 @@ def get_horizontal_winner(board: Board) -> Optional[Piece]:
     Returns:
         `None` if there is no winner and the piece color if there is a horizontal winner
     """
-    raise NotImplementedError
+    for i in range(0, 6):
+        for j in range(0, 4):
+            if (
+                board[i][j] == RED
+                and board[i][j + 1] == RED
+                and board[i][j + 2] == RED
+                and board[i][j + 3] == RED
+            ):
+                return RED
+            if (
+                board[i][j] == YELLOW
+                and board[i][j + 1] == YELLOW
+                and board[i][j + 2] == YELLOW
+                and board[i][j + 3] == YELLOW
+            ):
+                return YELLOW
+    return None
 
 
 def get_vertical_winner(board: Board) -> Optional[Piece]:
@@ -84,10 +114,26 @@ def get_vertical_winner(board: Board) -> Optional[Piece]:
     Returns:
         `None` if there is no winner and the piece color if there is a vertical winner
     """
-    raise NotImplementedError
+    for i in range(0, 3):
+        for j in range(0, 7):
+            if (
+                board[i][j] == RED
+                and board[i + 1][j] == RED
+                and board[i + 2][j] == RED
+                and board[i + 3][j] == RED
+            ):
+                return RED
+            if (
+                board[i][j] == YELLOW
+                and board[i + 1][j] == YELLOW
+                and board[i + 2][j] == YELLOW
+                and board[i + 3][j] == YELLOW
+            ):
+                return YELLOW
+    return None
 
 
-def get_up_diagonal_winner(board: Board) -> Piece | None:
+def get_up_diagonal_winner(board: Board) -> Optional[Piece]:
     """
     This function returns a color if there are 4 diagonal pieces of that color
     in a row. It returns `None` otherwise.
@@ -98,7 +144,23 @@ def get_up_diagonal_winner(board: Board) -> Piece | None:
     Returns:
         `None` if there is no winner and the piece color if there is a diagonal winner
     """
-    raise NotImplementedError
+    for i in range(0, 3):
+        for j in range(0, 4):
+            if (
+                board[i + 3][j] == RED
+                and board[i + 2][j + 1] == RED
+                and board[i + 1][j + 2] == RED
+                and board[i][j + 3] == RED
+            ):
+                return RED
+            if (
+                board[i + 3][j] == YELLOW
+                and board[i + 2][j + 1] == YELLOW
+                and board[i + 1][j + 2] == YELLOW
+                and board[i][j + 3] == YELLOW
+            ):
+                return YELLOW
+    return None
 
 
 def get_down_diagonal_winner(board: Board) -> Optional[Piece]:
@@ -112,7 +174,23 @@ def get_down_diagonal_winner(board: Board) -> Optional[Piece]:
     Returns:
         `None` if there is no winner and the piece color if there is a diagonal winner
     """
-    raise NotImplementedError
+    for i in range(0, 3):
+        for j in range(0, 4):
+            if (
+                board[i][j] == RED
+                and board[i + 1][j + 1] == RED
+                and board[i + 2][j + 2] == RED
+                and board[i + 3][j + 3] == RED
+            ):
+                return RED
+            if (
+                board[i][j] == YELLOW
+                and board[i + 1][j + 1] == YELLOW
+                and board[i + 2][j + 2] == YELLOW
+                and board[i + 3][j + 3] == YELLOW
+            ):
+                return YELLOW
+    return None
 
 
 def get_winner(board: Board) -> Optional[Piece]:
@@ -125,7 +203,31 @@ def get_winner(board: Board) -> Optional[Piece]:
     Returns:
         `None` if there is no winner and the piece color if there is a winner
     """
-    raise NotImplementedError
+    winner = get_horizontal_winner(board)
+    if winner == RED:
+        return RED
+    if winner == YELLOW:
+        return YELLOW
+
+    winner = get_vertical_winner(board)
+    if winner == RED:
+        return RED
+    if winner == YELLOW:
+        return YELLOW
+
+    winner = get_up_diagonal_winner(board)
+    if winner == RED:
+        return RED
+    if winner == YELLOW:
+        return YELLOW
+
+    winner = get_down_diagonal_winner(board)
+    if winner == RED:
+        return RED
+    if winner == YELLOW:
+        return YELLOW
+
+    return None
 
 
 def no_more_moves(board: Board) -> bool:
@@ -139,7 +241,11 @@ def no_more_moves(board: Board) -> bool:
     Returns:
         `True` if the board is full
     """
-    raise NotImplementedError
+    for row in board:
+        for piece in row:
+            if piece == None:
+                return False
+    return True
 
 
 def is_valid(board: Board, move: int) -> bool:
@@ -154,7 +260,15 @@ def is_valid(board: Board, move: int) -> bool:
     Returns:
         `True` if the move is valid
     """
-    raise NotImplementedError
+    if move < 0:
+        return False
+    if move > 6:
+        return False
+
+    if board[0][move] == None:
+        return True
+    else:
+        return False
 
 
 def put_piece(board: Board, move: int, piece: Piece) -> None:
@@ -170,10 +284,13 @@ def put_piece(board: Board, move: int, piece: Piece) -> None:
     Returns:
         None
     """
-    raise NotImplementedError
+    for i in range(5, -1, -1):
+        if board[i][move] == None:
+            board[i][move] = piece
+            return
 
 
-def update(state: State, board: Board) -> tuple[State, bool]:
+def update(state: State, board: Board) -> State:
     """
     This function handles input, updates the board and returns the next state.
 
@@ -182,21 +299,47 @@ def update(state: State, board: Board) -> tuple[State, bool]:
         board: the board to be updated (in place)
 
     Returns:
-        state, done: state is the new state, done is `True` if the app should exit.
+        the new state
     """
-    raise NotImplementedError
+    move = get_input(board, state)
+
+    if state == RED_TURN:
+        put_piece(board, move, RED)
+    if state == YELLOW_TURN:
+        put_piece(board, move, YELLOW)
+
+    winner = get_winner(board)
+    if winner == RED:
+        return RED_WIN
+    if winner == YELLOW:
+        return YELLOW_WIN
+
+    if no_more_moves(board):
+        return DRAW
+
+    if state == RED_TURN:
+        return YELLOW_TURN
+    else:
+        return RED_TURN
 
 
-def draw(state: State, board: Board, screen: pygame.Surface) -> None:
+def print_board(board: Board) -> None:
     """
-    This function takes the state and the board and draws them to the screen.
+    This function takes the board and prints it.
 
     Inputs:
-        state: the state
         board: the board
-        screen: the screen to draw to
 
     Returns:
         None
     """
-    raise NotImplementedError
+    print(" 1 2 3 4 5 6 7")
+    for row in board:
+        for piece in row:
+            if piece == YELLOW:
+                print(" y", end="")
+            if piece == RED:
+                print(" R", end="")
+            if piece is None:
+                print(" .", end="")
+        print("")
